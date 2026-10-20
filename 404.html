@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f2">
+  <meta name="robots" content="noindex, follow">
+  <meta name="description" content="这个页面没捞着，但 Trash Round 的快乐还在。返回首页，继续开题。">
+  <title>404 · 这个页面，没捞着。｜Trash Round #1</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23173c2e'/%3E%3Cg fill='none' stroke='%23dfed95' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 16h22M16 16l2 24h12l2-24M20 16V9h8v7M22 22v11M27 22v11'/%3E%3C/g%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f8f8f2;
+      --ink: #173c2e;
+      --muted: #7a8675;
+      --line: #e0e5d8;
+      --lime: #dfed95;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 280px; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--lime); color: var(--ink); }
+    a { color: inherit; text-decoration: none; }
+    button { color: inherit; font: inherit; }
+    a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    a:focus-visible, button:focus-visible { outline: 3px solid #83a45b; outline-offset: 6px; }
+    .shell { width: min(1240px, calc(100% - 96px)); margin-inline: auto; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .header { display: flex; justify-content: space-between; align-items: center; gap: 20px; min-height: 104px; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; }
+    .brand-mark { width: 38px; height: 42px; display: grid; place-items: center; border-radius: 10px; background: var(--ink); color: var(--lime); transform: rotate(-5deg); }
+    .brand-mark .icon { width: 24px; height: 24px; }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.35px; }
+    .brand-name small { display: block; margin-top: 7px; color: #88927f; font: 9px var(--mono); letter-spacing: 1.9px; }
+    .status { display: inline-flex; align-items: center; gap: 8px; color: #819174; font: 10px var(--mono); letter-spacing: 1px; }
+    .status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: #91a477; box-shadow: 0 0 0 4px #eaf0df; }
+    main { flex: 1; display: grid; place-items: center; padding: 25px 24px 65px; }
+    .message { width: 100%; max-width: 760px; text-align: center; }
+    .eyebrow { margin: 0; display: inline-flex; align-items: center; gap: 8px; font: 9px var(--mono); letter-spacing: 2.1px; color: #8a977d; }
+    .eyebrow::before { content: "/"; color: #b1bea0; font-size: 13px; margin-right: 3px; }
+    .error-art { position: relative; isolation: isolate; width: min(580px, 100%); height: 290px; margin: 20px auto 23px; display: flex; justify-content: center; align-items: center; gap: 1px; }
+    .orbit { width: 270px; height: 270px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1px solid #e0e7d2; border-radius: 50%; z-index: -1; }
+    .orbit::before { content: ""; position: absolute; inset: 22px; background: #eef1e4; border-radius: 50%; }
+    .orbit::after { content: ""; position: absolute; width: 7px; height: 7px; background: var(--paper); border: 1px solid #b5c59e; border-radius: 50%; left: 26px; top: 41px; }
+    .digit { font-family: Arial, Helvetica, sans-serif; font-size: 256px; font-weight: 800; line-height: 1; letter-spacing: -12px; position: relative; margin-top: 12px; }
+    .digit:first-of-type { margin-right: -1px; }
+    .digit:last-of-type { margin-left: -11px; }
+    .bin { width: 198px; height: 259px; position: relative; margin-inline: -3px; margin-top: -5px; flex-shrink: 0; overflow: visible; }
+    .bin-lid { transform-origin: 147px 91px; animation: lid-drift 5s ease-in-out infinite; }
+    .paper { transform-origin: 100px 54px; animation: paper-drift 5s ease-in-out infinite; }
+    .spark { position: absolute; width: 19px; height: 19px; color: #9faf82; right: 39px; top: 34px; transform: rotate(12deg); }
+    .little-cross { position: absolute; left: 40px; bottom: 45px; font: 18px var(--mono); font-weight: 300; color: #b4c09e; }
+    .error-index { position: absolute; bottom: -1px; right: 25px; font: 8px var(--mono); letter-spacing: 1.3px; color: #9eaa90; }
+    h1 { margin: 0; color: var(--ink); font-size: clamp(25px, 3.4vw, 36px); line-height: 1.5; font-weight: 650; letter-spacing: -1.3px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .description { margin: 16px 0 28px; color: var(--muted); font-size: 13px; line-height: 1.95; letter-spacing: .35px; }
+    .actions { display: flex; align-items: center; justify-content: center; gap: 13px; }
+    .button { min-height: 49px; display: inline-flex; justify-content: center; align-items: center; gap: 22px; padding: 14px 23px; border: 1px solid var(--line); background: transparent; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background .2s, transform .2s, border-color .2s; white-space: nowrap; }
+    .button .icon { width: 17px; height: 17px; }
+    .button-primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+    .button:hover { transform: translateY(-2px); background: #eef1e5; border-color: #c8d3bb; }
+    .button-primary:hover { background: #2b523b; border-color: #2b523b; }
+    .side-note { display: inline-flex; align-items: center; gap: 7px; margin: 23px 0 0; color: #9ba38e; font-size: 10px; letter-spacing: .2px; }
+    .side-note .icon { width: 12px; height: 12px; color: #859c68; }
+    .footer { border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 15px; min-height: 73px; color: #929d87; font-size: 10px; }
+    .footer p { margin: 0; letter-spacing: .4px; }
+    .footer-code { font: 9px var(--mono); letter-spacing: 1px; color: #a5ae9b; }
+    @keyframes lid-drift { 0%, 100% { transform: rotate(-8deg) translateY(-2px); } 50% { transform: rotate(-3deg) translateY(1px); } }
+    @keyframes paper-drift { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-7px) rotate(3deg); } }
+    @media (min-height: 900px) { main { padding-bottom: 105px; } .error-art { margin-bottom: 34px; } }
+    @media (max-width: 640px) {
+      .shell { width: calc(100% - 40px); }
+      .header { min-height: 86px; gap: 10px; }
+      .brand { gap: 9px; }
+      .brand-mark { width: 31px; height: 35px; border-radius: 8px; }
+      .brand-mark .icon { width: 21px; height: 21px; }
+      .brand-name { font-size: 12px; }
+      .brand-name small { font-size: 7px; letter-spacing: 1.6px; margin-top: 6px; }
+      .status { font-size: 8px; letter-spacing: .5px; gap: 7px; }
+      .status::before { width: 4px; height: 4px; }
+      main { padding: 35px 20px 65px; }
+      .eyebrow { font-size: 8px; letter-spacing: 1.7px; }
+      .error-art { height: 225px; max-width: 400px; margin: 20px auto 25px; }
+      .digit { font-size: 195px; letter-spacing: -10px; }
+      .bin { width: 150px; height: 196px; margin-inline: -6px; }
+      .orbit { width: 208px; height: 208px; }
+      .orbit::before { inset: 17px; }
+      .orbit::after { width: 6px; height: 6px; left: 20px; top: 31px; }
+      .spark { width: 15px; height: 15px; right: 8px; top: 23px; }
+      .little-cross { font-size: 14px; left: 5px; bottom: 29px; }
+      .error-index { font-size: 6px; right: 8px; bottom: -3px; }
+      h1 { font-size: 27px; letter-spacing: -.8px; }
+      .description { font-size: 12px; line-height: 1.95; margin: 15px 0 26px; }
+      .button { font-size: 11px; min-height: 47px; padding: 13px 18px; gap: 15px; }
+      .actions { gap: 10px; }
+      .side-note { font-size: 9px; margin-top: 24px; }
+      .footer { min-height: 65px; font-size: 9px; }
+      .footer-code { font-size: 7px; letter-spacing: .5px; }
+    }
+    @media (max-width: 360px) {
+      .status .status-label { display: none; }
+      .error-art { height: 205px; }
+      .digit { font-size: 169px; }
+      .bin { width: 130px; height: 170px; }
+      .orbit { width: 185px; height: 185px; }
+      h1 { font-size: 24px; }
+      .button { padding-inline: 15px; gap: 12px; }
+      .footer-code { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="header shell">
+    <a class="brand" data-home href="/" aria-label="返回 Trash Round 首页">
+      <span class="brand-mark"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M6 7l1 14h10l1-14M9 7V3h6v4M10 11v6M14 11v6"/></svg></span>
+      <span class="brand-name">TRASH ROUND<small>FIRST ROUND / #001</small></span>
+    </a>
+    <span class="status">404 <span class="status-label">/ 页面走丢了</span></span>
+  </header>
+
+  <main>
+    <section class="message" aria-labelledby="page-title">
+      <p class="eyebrow">OOPS! NOTHING IN THIS BIN.</p>
+
+      <div class="error-art" aria-hidden="true">
+        <div class="orbit"></div>
+        <span class="digit">4</span>
+        <svg class="bin" viewBox="0 0 200 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="101" cy="240" rx="66" ry="9" fill="#dfe7ce" opacity=".75"/>
+          <g class="paper">
+            <path d="m76 27 44-6 19 17-7 59-49 6-16-32Z" fill="#fcfdf6" stroke="#a4b590" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="m120 21-2 19 21-2M76 27l11 25-20 19 22 7-6 25M87 52l31-12 14 24-43 14 20 22" stroke="#cad4bb" stroke-width="1.1" stroke-linejoin="round"/>
+            <path d="m100 53 8-1c5-1 8 2 8 5 1 5-6 5-5 10M111 73h.1" stroke="#7e936a" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+          <path d="m48 100 14 124c1 8 12 13 39 13s38-5 39-13l14-124" fill="#dce99b"/>
+          <path d="m126 107-6 122c9-2 16-3 18-9l14-117Z" fill="#c8db87"/>
+          <path d="m48 100 14 124c1 8 12 13 39 13s38-5 39-13l14-124" stroke="#668044" stroke-width="1.7" stroke-linejoin="round"/>
+          <ellipse cx="101" cy="101" rx="53" ry="12" fill="#b4c976" stroke="#668044" stroke-width="1.7"/>
+          <ellipse cx="101" cy="101" rx="43" ry="7" fill="#3d5836"/>
+          <path d="m69 121 8 94M91 125l3 96M114 125l-3 96M135 121l-9 94" stroke="#839b54" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M62 221c9 9 59 14 76-1" stroke="#9eb86a" stroke-width="1.2" stroke-linecap="round"/>
+          <g class="bin-lid">
+            <path d="M48 90v-6c0-7 24-13 53-13s53 6 53 13v6" fill="#dce99b"/>
+            <ellipse cx="101" cy="90" rx="53" ry="11" fill="#d1e38f" stroke="#668044" stroke-width="1.7"/>
+            <path d="M48 90v-6c0-7 24-13 53-13s53 6 53 13v6" stroke="#668044" stroke-width="1.7"/>
+            <path d="M85 74v-8c0-3 7-5 16-5s16 2 16 5v8" fill="#e9f2bc" stroke="#668044" stroke-width="1.7"/>
+            <path d="M93 72v-5c4-2 12-2 16 0v5" stroke="#8ca35e" stroke-width="1.2"/>
+          </g>
+          <path d="m158 55 5-5M169 74l7-1" stroke="#a3b58a" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="digit">4</span>
+        <svg class="spark icon" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></svg>
+        <span class="little-cross">+</span>
+        <span class="error-index">ERR / PAGE_NOT_FOUND</span>
+      </div>
+
+      <h1 id="page-title"><span class="sr-only">404 — </span>这个页面，没捞着。</h1>
+      <p class="description">可能是地址输错了，也可能它已经搬家。<br>别担心，比赛的快乐还在首页等你。</p>
+
+      <div class="actions">
+        <a class="button button-primary" data-home href="/">返回首页<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <button class="button" id="go-back" type="button"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5 3 11l6 6M3 11h10a7 7 0 0 1 7 7v1"/></svg>返回上一页</button>
+      </div>
+      <p class="side-note"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2Z"/></svg>页面可以迷路，快乐不能。</p>
+    </section>
+  </main>
+
+  <footer class="footer shell"><p>认真写代码，尽情玩得开心。</p><span class="footer-code">TRASH ROUND #1 / 404</span></footer>
+
+  <script>
+    (() => {
+      'use strict';
+      // 可修改为你的网站首页地址。本地打开时，默认跳转到上一份比赛 HTML。
+      const homeUrl = location.protocol === 'file:' ? './Trash-Round-1.html' : '/';
+      document.querySelectorAll('[data-home]').forEach(link => {
+        link.href = homeUrl;
+      });
+      document.getElementById('go-back').addEventListener('click', () => {
+        if (history.length > 1) {
+          history.back();
+        } else {
+          location.assign(homeUrl);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
