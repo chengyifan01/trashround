@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#bcb2a4">
-  <title>间隙</title>
+  <title>黎明</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23352d27'/%3E%3Cg fill='%23bd9a6c'%3E%3Crect x='7' y='7' width='8' height='8'/%3E%3Crect x='17' y='7' width='8' height='8'/%3E%3Crect x='7' y='17' width='8' height='8'/%3E%3C/g%3E%3C/svg%3E">
   <style>
     :root { color-scheme: light; --stone: #bcb2a4; --copper: #93714d; }
@@ -28,6 +28,7 @@
     .board { position: relative; width: 100%; aspect-ratio: 1; background: #201e1a; box-shadow: 0 0 0 1px #100e0ba6, 0 0 0 2px #af916244, inset 0 0 25px #0009; isolation: isolate; --n: 3; }
     .board:focus { outline: none; }
     .board:focus-visible { outline: 2px solid #cdb086; outline-offset: 6px; }
+    .board.image-loading .tiles, .board.image-loading .empty-plate, .board.image-loading .hole-number { visibility: hidden; }
     .tiles { position: absolute; inset: 0; }
     .tile, .empty-plate, .hole-number { position: absolute; left: 0; top: 0; width: calc(100% / var(--n)); height: calc(100% / var(--n)); }
     .tile {
@@ -73,6 +74,10 @@
     .ending-quote span { display: block; }
     .ending.visible .ending-quote { opacity: 1; transform: translateY(0); }
     .ending.restored, .ending.restored .ending-quote { transition-duration: 0ms; transition-delay: 0ms; }
+    .load-status { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 20; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 4px; border: 1px solid #9d866762; background: #ebe2d5ee; color: #61503c; box-shadow: 0 4px 24px #36291b20; font: 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; letter-spacing: 1px; opacity: 0; pointer-events: none; transition: opacity 150ms ease; }
+    .load-status.is-loading { opacity: 1; }
+    .loading-ring { width: 13px; height: 13px; border-radius: 50%; border: 1px solid #987e5733; border-top-color: #8f6b40; animation: load-spin 1.1s linear infinite; }
+    @keyframes load-spin { to { transform: rotate(360deg); } }
     @keyframes return-piece { from { opacity: 0; } to { opacity: 1; } }
     @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 600px) {
@@ -92,10 +97,12 @@
       .game, .ending, .ending-quote { transition: none; }
       .game.arriving .frame { animation: none; }
       .returning { animation-duration: 1ms; }
+      .loading-ring { animation: none; }
     }
   </style>
 </head>
 <body>
+  <div class="load-status is-loading" id="load-status" role="status" aria-live="polite" aria-hidden="false"><i class="loading-ring" aria-hidden="true"></i><span id="load-label">加载中…</span></div>
   <div class="room" aria-hidden="true"></div>
   <main class="game" id="game">
     <div class="frame">
@@ -210,10 +217,12 @@
   }
 
   class GameSession {
-    constructor({ levels = LEVELS, random = Math.random, schedule = (callback, delay) => globalThis.setTimeout(callback, delay), onChange = () => {}, save = () => {} } = {}) {
+    constructor({ levels = LEVELS, random = Math.random, schedule = (callback, delay) => globalThis.setTimeout(callback, delay), prepare = () => true, onChange = () => {}, save = () => {} } = {}) {
       this.levels = levels;
       this.random = random;
       this.schedule = schedule;
+      this.prepare = prepare;
+      this.loadToken = 0;
       this.onChange = onChange;
       this.save = save;
       this.index = 0;
@@ -246,10 +255,29 @@
     open(index, restored) {
       this.index = index;
       this.puzzle = restored || scramble(this.level, this.random).puzzle;
-      this.phase = this.puzzle.solved() ? 'moving' : 'playing';
+      this.phase = 'loading';
       this.persist();
       this.emit('level');
-      if (this.phase === 'moving') this.schedule(() => this.completeLevel(), TIMING.move);
+      this.waitForImage(++this.loadToken);
+    }
+    waitForImage(token) {
+      if (token !== this.loadToken || this.phase !== 'loading') return;
+      const finish = ready => {
+        if (token !== this.loadToken || this.phase !== 'loading') return;
+        if (!ready) {
+          this.emit('loading-error');
+          this.schedule(() => this.waitForImage(token), 1200);
+          return;
+        }
+        this.phase = this.puzzle.solved() ? 'moving' : 'playing';
+        this.emit('loaded');
+        if (this.phase === 'moving') this.schedule(() => this.completeLevel(), TIMING.move);
+      };
+      try {
+        const ready = this.prepare(this.index);
+        if (ready && typeof ready.then === 'function') ready.then(finish, () => finish(false));
+        else finish(Boolean(ready));
+      } catch { finish(false); }
     }
     move(position) {
       if (this.phase !== 'playing') return false;
@@ -278,16 +306,192 @@
             this.persist();
             this.emit('ending', { restored: false });
           } else {
-            this.phase = 'leaving';
-            this.emit('leaving');
-            this.schedule(() => this.open(this.index + 1), TIMING.exit);
+            this.phase = 'loading-next';
+            this.emit('next-loading');
+            this.waitForNextImage(++this.loadToken);
           }
         }, TIMING.fill + TIMING.hold);
       }, TIMING.number);
     }
+    waitForNextImage(token) {
+      if (token !== this.loadToken || this.phase !== 'loading-next') return;
+      const finish = ready => {
+        if (token !== this.loadToken || this.phase !== 'loading-next') return;
+        if (!ready) {
+          this.emit('loading-error');
+          this.schedule(() => this.waitForNextImage(token), 1200);
+          return;
+        }
+        this.phase = 'leaving';
+        this.emit('leaving');
+        this.schedule(() => this.open(this.index + 1), TIMING.exit);
+      };
+      try {
+        const ready = this.prepare(this.index + 1);
+        if (ready && typeof ready.then === 'function') ready.then(finish, () => finish(false));
+        else finish(Boolean(ready));
+      } catch { finish(false); }
+    }
   }
 
   return { Puzzle, scramble, tileBackground, GameSession, LEVELS, TIMING };
+});
+
+(function (root, factory) {
+  const api = factory();
+  root.OrderedPlayback = api;
+  if (typeof module === 'object' && module.exports) module.exports = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const defaultClock = {
+    now: () => globalThis.performance.now(),
+    set: (callback, delay) => globalThis.setTimeout(callback, delay),
+    clear: id => globalThis.clearTimeout(id),
+  };
+
+  class Player {
+    constructor({ count, prepare, show, fadeTo, commit, loading = () => {}, clock = defaultClock, hidden = () => false, hold = 7000, fade = 1000, retry = 1200 }) {
+      this.count = count; this.prepare = prepare;
+      this.show = show; this.fadeTo = fadeTo; this.commit = commit;
+      this.loading = loading;
+      this.clock = clock; this.hidden = hidden;
+      this.hold = hold; this.fade = fade; this.retry = retry;
+      this.index = -1; this.phase = 'idle'; this.paused = false;
+      this.timer = null; this.action = null; this.remaining = 0; this.deadline = 0;
+      this.requestId = 0; this.readyIndex = -1;
+    }
+    blocked() { return this.paused || this.hidden(); }
+    start() {
+      if (this.phase !== 'idle') return;
+      this.phase = 'initial';
+      this.request(0, true);
+    }
+    arm(delay, action) {
+      if (this.timer !== null) this.clock.clear(this.timer);
+      this.timer = null;
+      this.remaining = delay; this.action = action;
+      this.resumeTimer();
+    }
+    resumeTimer() {
+      if (this.blocked() || this.timer !== null || !this.action) return;
+      this.deadline = this.clock.now() + this.remaining;
+      this.timer = this.clock.set(() => {
+        this.timer = null;
+        this.remaining = 0;
+        if (this.blocked()) return;
+        const action = this.action;
+        this.action = null;
+        action();
+      }, this.remaining);
+    }
+    setPaused(value) {
+      this.paused = Boolean(value);
+      if (this.blocked()) {
+        if (this.timer !== null) {
+          this.remaining = Math.max(0, this.deadline - this.clock.now());
+          this.clock.clear(this.timer);
+          this.timer = null;
+        }
+        return;
+      }
+      if (this.phase === 'waiting' && this.readyIndex >= 0) this.beginFade(this.readyIndex);
+      else this.resumeTimer();
+      if (this.phase === 'holding') this.preload();
+    }
+    request(index, initial = false) {
+      const request = ++this.requestId;
+      this.phase = initial ? 'initial' : 'waiting';
+      this.readyIndex = -1;
+      this.loading(true, { index, initial, failed: false });
+      Promise.resolve().then(() => this.prepare(index)).catch(() => false).then(ready => {
+        if (request !== this.requestId) return;
+        if (!ready) {
+          this.loading(true, { index, initial, failed: true });
+          // Keep the current picture. A failed image is retried, never skipped.
+          this.arm(this.retry, () => this.request(index, initial));
+          return;
+        }
+        if (initial) {
+          this.index = index;
+          this.phase = 'holding';
+          this.show(index);
+          this.loading(false);
+          this.arm(this.hold, () => this.request((this.index + 1) % this.count));
+          this.preload();
+        } else {
+          this.readyIndex = index;
+          this.loading(false);
+          if (!this.blocked()) this.beginFade(index);
+        }
+      });
+    }
+    beginFade(index) {
+      if (this.blocked() || this.phase !== 'waiting' || index !== (this.index + 1) % this.count) return;
+      this.readyIndex = -1;
+      this.phase = 'fading';
+      this.fadeTo(index, this.index);
+      this.arm(this.fade, () => {
+        this.index = index;
+        this.phase = 'holding';
+        this.commit(index);
+        this.arm(this.hold, () => this.request((this.index + 1) % this.count));
+        this.preload();
+      });
+    }
+    preload() {
+      if (this.blocked()) return;
+      Promise.resolve().then(() => this.prepare((this.index + 1) % this.count)).catch(() => {});
+    }
+  }
+
+  class ImageReadiness {
+    constructor({ images, probe, clock = defaultClock, timeout = 2200 }) {
+      this.images = images; this.probe = probe; this.clock = clock; this.timeout = timeout;
+      this.pending = new Map();
+    }
+    ensure(index) {
+      if (this.pending.has(index)) return this.pending.get(index);
+      const image = this.images[index];
+      const loaded = () => image.complete && image.naturalWidth > 0;
+      const drawable = () => {
+        if (!loaded() || !this.probe) return false;
+        try { return Boolean(this.probe(image)); } catch { return false; }
+      };
+      if (drawable()) return Promise.resolve(true);
+      const promise = new Promise(resolve => {
+        let settled = false, decoding = false, timer = null;
+        const finish = ready => {
+          if (settled) return;
+          settled = true;
+          image.removeEventListener('load', check);
+          image.removeEventListener('error', failed);
+          if (timer !== null) this.clock.clear(timer);
+          resolve(Boolean(ready));
+        };
+        const failed = () => finish(false);
+        const check = () => {
+          if (!loaded()) return;
+          if (drawable()) { finish(true); return; }
+          if (decoding) return;
+          decoding = true;
+          if (typeof image.decode !== 'function') { finish(!this.probe); return; }
+          Promise.resolve().then(() => image.decode()).then(() => finish(loaded() && (!this.probe || drawable())), () => finish(drawable()));
+        };
+        image.addEventListener('load', check);
+        image.addEventListener('error', failed);
+        // A decode promise cannot hold the player forever.
+        timer = this.clock.set(() => finish(drawable() || (!this.probe && loaded())), this.timeout);
+        check();
+        if (image.complete && !image.naturalWidth && image.src) image.src = image.src;
+      });
+      this.pending.set(index, promise);
+      promise.then(() => { if (this.pending.get(index) === promise) this.pending.delete(index); });
+      return promise;
+    }
+  }
+
+  return { Player, ImageReadiness };
 });
 
   </script>
@@ -305,8 +509,34 @@
   const dots = [...document.querySelectorAll('.progress-dot')];
   const ending = document.getElementById('ending');
   const endingImage = document.getElementById('ending-image');
+  const loadStatus = document.getElementById('load-status');
+  const loadLabel = document.getElementById('load-label');
   const tiles = new Map();
   let session;
+
+  let probe = null;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context) probe = image => {
+      context.clearRect(0, 0, 1, 1);
+      context.drawImage(image, 0, 0, 1, 1);
+      return context.getImageData(0, 0, 1, 1).data[3] > 0;
+    };
+  } catch { /* Fall back to bounded image decoding. */ }
+  const imageNodes = IMAGES.map(source => {
+    const image = document.createElement('img');
+    image.decoding = 'async';
+    image.src = source;
+    return image;
+  });
+  const loader = new window.OrderedPlayback.ImageReadiness({ images: imageNodes, probe });
+  function loading(visible, failed = false) {
+    loadStatus.classList.toggle('is-loading', visible);
+    loadStatus.setAttribute('aria-hidden', String(!visible));
+    if (visible) loadLabel.textContent = failed ? '加载失败，正在重试…' : '加载中…';
+  }
 
   function position(element, index, n) {
     element.style.transform = `translate(${index % n * 100}%, ${Math.floor(index / n) * 100}%)`;
@@ -336,6 +566,8 @@
   function openLevel() {
     const { index, level } = session;
     board.classList.remove('filled', 'revealing');
+    board.classList.add('image-loading');
+    loading(true);
     board.style.setProperty('--n', String(level.n));
     board.style.setProperty('--image', `url("${IMAGES[index]}")`);
     board.setAttribute('aria-label', `${level.n} 行 ${level.n} 列的图片滑块拼图`);
@@ -363,6 +595,14 @@
   }
   function render(event) {
     if (event.type === 'level') { openLevel(); return; }
+    if (event.type === 'loading-error') { loading(true, true); return; }
+    if (event.type === 'next-loading') { loading(true); return; }
+    if (event.type === 'loaded') {
+      board.classList.remove('image-loading');
+      loading(false);
+      refresh();
+      return;
+    }
     if (event.type === 'move' || event.type === 'ready') { refresh(); return; }
     if (event.type === 'reveal') {
       refresh();
@@ -386,23 +626,37 @@
       board.classList.add('filled');
       return;
     }
-    if (event.type === 'leaving') { stage.classList.add('departing'); return; }
+    if (event.type === 'leaving') { loading(false); stage.classList.add('departing'); return; }
     if (event.type === 'ending') {
-      endingImage.src = IMAGES[0];
-      ending.hidden = false;
-      if (event.restored) ending.classList.add('restored');
-      requestAnimationFrame(() => {
-        ending.classList.add('visible');
-        stage.classList.add('finished');
-        stage.inert = true;
-        board.tabIndex = -1;
-        stage.setAttribute('aria-hidden', 'true');
-        ending.setAttribute('aria-hidden', 'false');
-      });
+      loading(true);
+      const attemptEnding = () => {
+        const finish = ready => {
+          if (!ready) { loading(true, true); globalThis.setTimeout(attemptEnding, 1200); return; }
+          endingImage.src = IMAGES[0];
+          ending.hidden = false;
+          if (event.restored) ending.classList.add('restored');
+          requestAnimationFrame(() => {
+            ending.classList.add('visible');
+            stage.classList.add('finished');
+            stage.inert = true;
+            board.tabIndex = -1;
+            stage.setAttribute('aria-hidden', 'true');
+            ending.setAttribute('aria-hidden', 'false');
+            loading(false);
+          });
+        };
+        try {
+          const ready = loader.ensure(0);
+          if (ready && typeof ready.then === 'function') ready.then(finish, () => finish(false));
+          else finish(Boolean(ready));
+        } catch { finish(false); }
+      };
+      attemptEnding();
     }
   }
 
   session = new Core.GameSession({
+    prepare: index => loader.ensure(index),
     onChange: render,
     save: state => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* Continue without persistence. */ } },
   });
@@ -421,7 +675,7 @@
   });
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { /* Start a fresh game. */ }
-  // Start immediately. Image decoding and network access never gate the game.
+  // Display loading immediately; tiles unlock only after their image is ready.
   session.start(saved);
 })();
 
