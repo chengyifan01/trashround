@@ -124,7 +124,7 @@
 </head>
 <body>
   <header class="header shell">
-    <a class="brand" data-home href="/" aria-label="返回 Trash Round 首页">
+    <a class="brand" data-home href="/trashround" aria-label="返回 Trash Round 首页">
       <span class="brand-mark"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M6 7l1 14h10l1-14M9 7V3h6v4M10 11v6M14 11v6"/></svg></span>
       <span class="brand-name">TRASH ROUND<small>FIRST ROUND / #001</small></span>
     </a>
@@ -171,7 +171,7 @@
       <p class="description">可能是地址输错了，也可能它已经搬家。<br>别担心，比赛的快乐还在首页等你。</p>
 
       <div class="actions">
-        <a class="button button-primary" data-home href="/">返回首页<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="button button-primary" data-home href="/trashround">返回首页<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         <button class="button" id="go-back" type="button"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5 3 11l6 6M3 11h10a7 7 0 0 1 7 7v1"/></svg>返回上一页</button>
       </div>
       <p class="side-note"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2Z"/></svg>页面可以迷路，快乐不能。</p>
@@ -183,8 +183,8 @@
   <script>
     (() => {
       'use strict';
-      // 可修改为你的网站首页地址。本地打开时，默认跳转到上一份比赛 HTML。
-      const homeUrl = location.protocol === 'file:' ? './Trash-Round-1.html' : '/';
+      // 网站首页地址。
+      const homeUrl = '/trashround';
       document.querySelectorAll('[data-home]').forEach(link => {
         link.href = homeUrl;
       });
